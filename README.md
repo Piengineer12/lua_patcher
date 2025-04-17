@@ -1,5 +1,7 @@
 # Lua Patcher
-This addon / mod stops the most common Lua errors from resolving, but has the potential to cause performance issues. Try to only use this as a last resort.
+This addon / mod stops the most common Lua errors from resolving, but has the potential to cause performance issues. Maybe try to only use this as a last resort.
+
+To install, drag the `lua_patcher` folder within this folder into `GarrysMod/garrysmod/addons` for Garry's Mod, or `Balatro/Mods` for Balatro. Check that `addon.json` resides in  `GarrysMod/garrysmod/addons/lua_patcher/addon.json` or `Balatro/Mods/lua_patcher/addon.json`
 
 **For Garry's Mod Players: This addon and other Garry's Mod-specific information pertaining to this addon is on the [Garry's Mod Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112).**
 
