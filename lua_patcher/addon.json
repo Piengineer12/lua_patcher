@@ -1,0 +1,21 @@
+{
+	"id": "lua_patcher",
+	"name": "Lua Patcher",
+	"display_name": "LP",
+	"author": ["Piengineer12"],
+	"description": "Lua Patcher, preventing errors since 2021, now available for both Garry's Mod and Balatro.",
+	"prefix": "lua_patcher",
+	"main_file": "lua/autorun/+piengineers_lua_patcher_rewrite.lua",
+	"priority": -1,
+	"badge_colour": "2222FF",
+	"badge_text_colour": "CCCCCC",
+	"version": "3.1.1",
+	"dependencies": [],
+
+	"title": "Lua Patcher",
+	"type": "tool",
+	"tags": ["build"],
+	"ignore": [
+		"*.moon"
+	]
+}
