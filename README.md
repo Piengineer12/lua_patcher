@@ -1,5 +1,5 @@
 # Lua Patcher
-Designed for Garry's Mod and Balatro, this addon / mod stops the most common Lua errors from resolving, but has the potential to cause performance issues. Maybe try to only use this as a last resort. 
+Designed specifically for Garry's Mod and Balatro, this addon / mod stops the most common Lua errors from resolving, but has the potential to cause performance issues. Maybe try to only use this as a last resort. 
 
 To install, drag the `lua_patcher` folder within this folder into `GarrysMod/garrysmod/addons` for Garry's Mod, or `Balatro/Mods` for Balatro. Check that `addon.json` resides in  `GarrysMod/garrysmod/addons/lua_patcher/addon.json` or `Balatro/Mods/lua_patcher/addon.json` after the move.
 
