@@ -21,6 +21,3 @@ Other than the above, there will exist a way for Lua Patcher to deal with the er
 Sadly, each illegal Lua operation must be redefined one by one. If this happens, give me the error message as well as which mod did it so that I can see what operation Lua was trying to do.
 
 Note that if you don't give me enough information about the error, I might not be able to fix it!
-
-# Miscellaneous
-If you like my work, you have the option to [donate on Ko-fi](https://ko-fi.com/piengineer12) so that I can keep working for another day. Every little bit helps!
