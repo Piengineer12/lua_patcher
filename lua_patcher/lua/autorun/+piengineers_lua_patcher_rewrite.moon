@@ -2,7 +2,7 @@ export LUA_PATCHER
 LUA_PATCHER or= {
     workshop_page: "https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112"
     profile_page: "https://steamcommunity.com/id/Piengineer12"
-    github_page: "https://github.com/Piengineer12/public-addons/tree/master/lua_patcher"
+    github_page: "https://github.com/Piengineer12/lua_patcher"
     donate_page: "https://ko-fi.com/piengineer12"
     extra_info: "Links above are confirmed working as of 2022-05-26. All dates are in ISO 8601 format."
     unpatched: {}
