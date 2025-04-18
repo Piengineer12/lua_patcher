@@ -1,14 +1,14 @@
 LUA_PATCHER = LUA_PATCHER or {
-  workshop_page = "https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112",
-  profile_page = "https://steamcommunity.com/id/Piengineer12",
+  steam_workshop_page = "https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112",
+  steam_profile_page = "https://steamcommunity.com/id/Piengineer12",
   github_page = "https://github.com/Piengineer12/lua_patcher",
   donate_page = "https://ko-fi.com/piengineer12",
-  extra_info = "Links above are confirmed working as of 2022-05-26. All dates are in ISO 8601 format.",
+  extra_info = "Links above are confirmed working as of 2025-04-18. All dates are in ISO 8601 format.",
   unpatched = { },
   tracebacks_logged = { }
 }
-LUA_PATCHER.VERSION = "3.1.1"
-LUA_PATCHER.VERSION_DATE = "2025-04-17"
+LUA_PATCHER.VERSION = "4.0.0"
+LUA_PATCHER.VERSION_DATE = "2025-04-18"
 local Log, LogError
 if gmod then
   local color_red = Color(255, 0, 0)
@@ -58,7 +58,11 @@ if gmod then
       end
     end
   end
-elseif sendInfoMessage and sendErrorMessage then
+else
+  local sendInfoMessage = sendInfoMessage or function(msg, label)
+    return print("[" .. tostring(label) .. "] " .. tostring(msg))
+  end
+  local sendErrorMessage = sendErrorMessage or sendInfoMessage
   Log = function(...)
     return sendInfoMessage(string.format(...), 'Lua Patcher')
   end
@@ -71,24 +75,6 @@ elseif sendInfoMessage and sendErrorMessage then
         times_logged = times_logged + 1
         if times_logged >= 10 then
           sendErrorMessage('Suppressing further logs about the same error.', 'Lua Patcher')
-        end
-        LUA_PATCHER.tracebacks_logged[message] = times_logged
-      end
-    end
-  end
-else
-  Log = function(...)
-    return print("[Lua Patcher] " .. tostring(string.format(...)))
-  end
-  LogError = function(...)
-    local message = debug.traceback("[Lua Patcher] " .. tostring(string.format(...)), 2)
-    if not (string.find(message, "'pcall'")) then
-      local times_logged = LUA_PATCHER.tracebacks_logged[message] or 0
-      if times_logged < 10 then
-        print(message)
-        times_logged = times_logged + 1
-        if times_logged >= 10 then
-          Log('Suppressing further logs about this error.')
         end
         LUA_PATCHER.tracebacks_logged[message] = times_logged
       end
