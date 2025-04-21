@@ -9,7 +9,7 @@
 	"priority": -1,
 	"badge_colour": "2222FF",
 	"badge_text_colour": "CCCCCC",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"dependencies": [],
 
 	"title": "Lua Patcher",

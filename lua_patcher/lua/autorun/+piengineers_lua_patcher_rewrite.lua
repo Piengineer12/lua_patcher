@@ -7,8 +7,8 @@ LUA_PATCHER = LUA_PATCHER or {
   unpatched = { },
   tracebacks_logged = { }
 }
-LUA_PATCHER.VERSION = "4.0.0"
-LUA_PATCHER.VERSION_DATE = "2025-04-18"
+LUA_PATCHER.VERSION = "4.0.1"
+LUA_PATCHER.VERSION_DATE = "2025-04-21"
 local Log, LogError
 if gmod then
   local color_red = Color(255, 0, 0)
@@ -83,23 +83,27 @@ else
 end
 local OverwriteTable
 OverwriteTable = function(table_name, table_contents, new_table_contents)
+  if not (table_contents) then
+    return 
+  end
   LUA_PATCHER.unpatched[table_name] = LUA_PATCHER.unpatched[table_name] or { }
   local target_table = LUA_PATCHER.unpatched[table_name]
   for k, v in pairs(new_table_contents) do
     target_table[k] = table_contents[k] or true
-  end
-  for k, v in pairs(new_table_contents) do
     table_contents[k] = v
   end
 end
 local RollbackTable
 RollbackTable = function(table_name, table_contents)
-  for k, v in pairs(LUA_PATCHER.unpatched[table_name]) do
-    if v == true then
-      table_contents[k] = nil
-    else
-      table_contents[k] = v
+  if LUA_PATCHER.unpatched[table_name] and table_contents then
+    for k, v in pairs(LUA_PATCHER.unpatched[table_name]) do
+      if v == true then
+        table_contents[k] = nil
+      else
+        table_contents[k] = v
+      end
     end
+    LUA_PATCHER.unpatched[table_name] = nil
   end
 end
 local OverwriteFunction
@@ -110,6 +114,9 @@ end
 local RollbackFunction
 RollbackFunction = function(func_name)
   _G[func_name] = LUA_PATCHER.unpatched[func_name]
+  if LUA_PATCHER.unpatched[func_name] then
+    LUA_PATCHER.unpatched[func_name] = nil
+  end
 end
 local PatchPrimitives
 PatchPrimitives = function()
@@ -282,6 +289,36 @@ UnpatchPrimitives = function()
 end
 local PatchLibraries
 PatchLibraries = function()
+  OverwriteTable("bit", bit, {
+    band = function(value, ...)
+      if not (value) then
+        LogError("Some code attempted to call bit.band without any arguments.")
+      end
+      return LUA_PATCHER.unpatched.bit.band(value or 0, ...)
+    end,
+    bor = function(value, ...)
+      if not (value) then
+        LogError("Some code attempted to call bit.bor without any arguments.")
+      end
+      return LUA_PATCHER.unpatched.bit.bor(value or 0, ...)
+    end
+  })
+  return OverwriteTable("math", math, {
+    abs = function(value, ...)
+      if not (value) then
+        LogError("Some code attempted to call math.abs without any arguments.")
+      end
+      return LUA_PATCHER.unpatched.math.abs(value or 0, ...)
+    end
+  })
+end
+local UnpatchLibraries
+UnpatchLibraries = function()
+  RollbackTable("bit", bit)
+  return RollbackTable("math", math)
+end
+local PatchGModLibraries
+PatchGModLibraries = function()
   OverwriteFunction("CreateClientConVar", function(name, default, shouldsave, userinfo, helptext, min, max, ...)
     if min and not isnumber(min) then
       LogError("Some code attempted to call CreateClientConVar with non-number min argument.")
@@ -290,6 +327,10 @@ PatchLibraries = function()
     if max and not isnumber(max) then
       LogError("Some code attempted to call CreateClientConVar with non-number max argument.")
       max = nil
+    end
+    if (helptext and not isstring(helptext)) then
+      helptext = tostring(helptext)
+      LogError("Some code attempted to call CreateConVar with non-string help text.")
     end
     return LUA_PATCHER.unpatched.CreateClientConVar(name, default, shouldsave, userinfo, helptext, min, max, ...)
   end)
@@ -302,7 +343,7 @@ PatchLibraries = function()
       LogError("Some code attempted to call CreateConVar with non-number max argument.")
       max = nil
     end
-    if not (isstring(helptext)) then
+    if (helptext and not isstring(helptext)) then
       helptext = tostring(helptext)
       LogError("Some code attempted to call CreateConVar with non-string help text.")
     end
@@ -395,20 +436,6 @@ PatchLibraries = function()
       return LUA_PATCHER.unpatched.vgui.Create(pnl, parent, ...)
     end
   })
-  OverwriteTable("bit", bit, {
-    band = function(value, ...)
-      if not (value) then
-        LogError("Some code attempted to call bit.band without any arguments.")
-      end
-      return LUA_PATCHER.unpatched.bit.band(value or 0, ...)
-    end,
-    bor = function(value, ...)
-      if not (value) then
-        LogError("Some code attempted to call bit.bor without any arguments.")
-      end
-      return LUA_PATCHER.unpatched.bit.bor(value or 0, ...)
-    end
-  })
   OverwriteTable("input", input, {
     IsKeyDown = function(key, ...)
       if key then
@@ -444,8 +471,8 @@ PatchLibraries = function()
     end
   })
 end
-local UnpatchLibraries
-UnpatchLibraries = function()
+local UnpatchGModLibraries
+UnpatchGModLibraries = function()
   RollbackFunction("CreateClientConVar")
   RollbackFunction("CreateConVar")
   RollbackFunction("EmitSound")
@@ -1162,13 +1189,14 @@ Patch = function()
   Log("Patching primitives...")
   PatchPrimitives()
   Log("Primitives patched!")
+  Log("Patching libraries...")
+  PatchLibraries()
   if gmod then
+    PatchGModLibraries()
+    Log("Libraries patched!")
     Log("Patching classes...")
     PatchClasses()
     Log("Classes patched!")
-    Log("Patching libraries...")
-    PatchLibraries()
-    Log("Libraries patched!")
     Log("Patching hooks...")
     PatchHooks()
     Log("Hooks patched!")
@@ -1176,6 +1204,7 @@ Patch = function()
     LUA_PATCHER.start_wait_time = SysTime()
     return timer.Simple(0, PatchConsoleCommands)
   else
+    Log("Libraries patched!")
     return Log("Lua has been patched! Remember that if you are a Lua developer, " .. "please disable this script or your users may get errors from your code! " .. "Also, if you still see errors, " .. "remember to report the FULL error message to the creator of Lua Patcher!")
   end
 end
@@ -1193,17 +1222,26 @@ Unpatch = function()
     Log("Unpatching hooks...")
     UnpatchHooks()
     Log("Hooks unpatched!")
-    Log("Unpatching libraries...")
-    UnpatchLibraries()
-    Log("Libraries unpatched!")
     Log("Unpatching classes...")
     UnpatchClasses()
     Log("Classes unpatched!")
+    Log("Unpatching libraries...")
+    UnpatchGModLibraries()
+  else
+    Log("Unpatching libraries...")
   end
+  UnpatchLibraries()
+  Log("Libraries unpatched!")
   Log("Unpatching primitives...")
   UnpatchPrimitives()
   Log("Primitives unpatched!")
-  return Log("All patches have been reverted!")
+  Log("All patches have been reverted!")
+  if next(LUA_PATCHER.unpatched) then
+    Log('...but a leak has happened!! Affected items:')
+    for k, v in pairs(LUA_PATCHER.unpatched) do
+      Log("- " .. tostring(k) .. " (" .. tostring(v) .. ")")
+    end
+  end
 end
 Patch()
 LUA_PATCHER.Patch = Patch
