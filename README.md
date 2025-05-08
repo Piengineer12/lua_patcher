@@ -3,9 +3,10 @@ Designed specifically for Garry's Mod and Balatro, this addon / mod stops the mo
 
 *CAUTION: Never trigger an ***intentional*** crash while this addon/mod is enabled. That's like pitting an unstoppable force versus an immovable object, anything could happen and it'll be your fault!*
 
+# How do?
 To install, decompress this archive and drop the resulting folder into `GarrysMod/garrysmod/addons` for Garry's Mod, or `Balatro/Mods` for Balatro. Check that `addon.json` resides in `GarrysMod/garrysmod/addons/lua_patcher/addon.json` or `Balatro/Mods/lua_patcher/addon.json` after the move.
 
-Discussion of this addon is held in the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112) for Garry's Mod, while for Balatro they are held in Discord either in the [official Balatro server](https://discord.com/channels/1116389027176787968/1370113335659593898/1370113335659593898) or the [Steamodded server](https://discord.com/channels/1334988047229653042/1362508338352357556/1362508338352357556).
+Discussion of this addon is held in the [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112) for Garry's Mod, while for Balatro they are held in Discord in the [official Balatro server](https://discord.com/channels/1116389027176787968/1370113335659593898/1370113335659593898) and the [Steamodded server](https://discord.com/channels/1334988047229653042/1362508338352357556/1362508338352357556).
 
 **For Garry's Mod Players: This addon and other Garry's Mod-specific information pertaining to this addon is on the [Garry's Mod Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2403043112).**
 
