@@ -9,13 +9,15 @@
 	"priority": -1,
 	"badge_colour": "2222FF",
 	"badge_text_colour": "CCCCCC",
-	"version": "4.0.1",
+	"version": "4.1.0",
 	"dependencies": [],
 
 	"title": "Lua Patcher",
 	"type": "tool",
 	"tags": ["build"],
 	"ignore": [
+		"LICENSE",
+		"README.md",
 		"*.moon"
 	]
 }

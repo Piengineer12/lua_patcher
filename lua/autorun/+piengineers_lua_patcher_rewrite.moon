@@ -9,8 +9,8 @@ LUA_PATCHER or= {
     tracebacks_logged: {}
 }
 
-LUA_PATCHER.VERSION = "4.0.1"
-LUA_PATCHER.VERSION_DATE = "2025-04-21"
+LUA_PATCHER.VERSION = "4.1.0" -- to dev: remember to also update addon.json!
+LUA_PATCHER.VERSION_DATE = "2025-05-08"
 
 local Log, LogError
 
@@ -156,7 +156,7 @@ PatchPrimitives = ->
             LogError "Some code attempted to iterate over nothing."
         elseif type(tab) == "number"
             -- TODO: is this actually supposed to mean {[1]: 1, [2]: 2, ..., [tab]: tab}?
-            tab = {}
+            tab = {tab}
             LogError "Some code attempted to iterate over a number."
         LUA_PATCHER.unpatched.pairs tab, ...
 
@@ -607,6 +607,11 @@ PatchClasses = ->
 				LogError "Some code attempted to set the animation of a NULL entity."
 			else
                 LUA_PATCHER.unpatched.ENTITY.SetAnimation @, ...
+        SetKeyValue: (...) =>
+			if NULL == @
+				LogError "Some code attempted to set a key value of a NULL entity."
+			else
+                LUA_PATCHER.unpatched.ENTITY.SetKeyValue @, ...
     }
 
     nw_override_table = {
