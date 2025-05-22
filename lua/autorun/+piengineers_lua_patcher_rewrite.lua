@@ -7,8 +7,8 @@ LUA_PATCHER = LUA_PATCHER or {
   unpatched = { },
   tracebacks_logged = { }
 }
-LUA_PATCHER.VERSION = "4.1.0"
-LUA_PATCHER.VERSION_DATE = "2025-05-08"
+LUA_PATCHER.VERSION = "4.2.0"
+LUA_PATCHER.VERSION_DATE = "2025-05-22"
 local Log, LogError
 if gmod then
   local color_red = Color(255, 0, 0)
@@ -123,23 +123,23 @@ PatchPrimitives = function()
   local NIL = getmetatable(nil) or { }
   OverwriteTable("NIL", NIL, {
     __add = function(a, b)
-      LogError("Some code attempted to add with nil.")
+      LogError('Some code attempted to add "%s" with "%s".', tostring(a), tostring(b))
       return a or b
     end,
     __sub = function(a, b)
-      LogError("Some code attempted to subtract with nil.")
+      LogError('Some code attempted to subtract "%s" with "%s".', tostring(a), tostring(b))
       return a or -b
     end,
     __mul = function(a, b)
-      LogError("Some code attempted to multiply with nil.")
+      LogError('Some code attempted to multiply "%s" with "%s".', tostring(a), tostring(b))
       return a or b
     end,
     __div = function(a, b)
-      LogError("Some code attempted to divide with nil.")
+      LogError('Some code attempted to divide "%s" by "%s".', tostring(a), tostring(b))
       return a
     end,
     __pow = function(a, b)
-      LogError("Some code attempted to raise something to a power with nil.")
+      LogError('Some code attempted to raise "%s" to the power of "%s".', tostring(a), tostring(b))
       if b then
         return nil
       else
@@ -147,19 +147,19 @@ PatchPrimitives = function()
       end
     end,
     __unm = function(a)
-      LogError("Some code attempted to negate nil.")
+      LogError('Some code attempted to negate "%s".', tostring(a))
       return a
     end,
     __concat = function(a, b)
-      LogError("Some code attempted to concatenate with nil.")
+      LogError('Some code attempted to concatenate "%s" with "%s".', tostring(a), tostring(b))
       return tostring(a) .. tostring(b)
     end,
     __len = function(a)
-      LogError("Some code attempted to get the length of nil.")
+      LogError('Some code attempted to get the length of "%s".', tostring(a))
       return 0
     end,
     __lt = function(a, b)
-      LogError("Some code attempted to see if something is bigger or smaller than nil.")
+      LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
       if type(a) == "number" or type(b) == "number" then
         return (a or 0) < (b or 0)
       else
@@ -167,44 +167,44 @@ PatchPrimitives = function()
       end
     end,
     __le = function(a, b)
-      LogError("Some code attempted to see if something is bigger or smaller than nil.")
+      LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
       if type(a) == "number" or type(b) == "number" then
         return (a or 0) <= (b or 0)
       else
         return tostring(a) <= tostring(b)
       end
     end,
-    __index = function()
-      return LogError("Some code attempted to index nil.")
+    __index = function(a, b)
+      return LogError('Some code attempted to index "%s" with key "%s".', tostring(a), tostring(b))
     end,
-    __newindex = function()
-      return LogError("Some code attempted to assign a member value to nil.")
+    __newindex = function(a, b, c)
+      return LogError('Some code attempted to index "%s" setting key "%s" to value "%s".', tostring(a), tostring(b), tostring(c))
     end,
-    __call = function()
-      return LogError("Some code attempted to call nil as a function.")
+    __call = function(a, ...)
+      return LogError('Some code attempted to call "%s" as a function with %u arguments.', tostring(a), select('#', ...))
     end
   })
   local BOOL = getmetatable(true) or { }
   OverwriteTable("BOOL", BOOL, {
-    __index = function()
-      return LogError("Some code attempted to index a boolean.")
+    __index = function(a, b)
+      return LogError('Some code attempted to index "%s" with key "%s".', tostring(a), tostring(b))
     end,
-    __newindex = function()
-      return LogError("Some code attempted to assign a member value to a boolean.")
+    __newindex = function(a, b, c)
+      return LogError('Some code attempted to index "%s" setting key "%s" to value "%s".', tostring(a), tostring(b), tostring(c))
     end,
-    __call = function()
-      return LogError("Some code attempted to call a boolean as a function.")
+    __call = function(a, ...)
+      return LogError('Some code attempted to call "%s" as a function with %u arguments.', tostring(a), select('#', ...))
     end
   })
   OverwriteFunction("pairs", function(tab, ...)
     if not tab then
       tab = { }
-      LogError("Some code attempted to iterate over nothing.")
-    elseif type(tab) == "number" then
+      LogError('Some code attempted to iterate over nothing.')
+    elseif type(tab) == 'number' then
+      LogError('Some code attempted to iterate over "%s".', tostring(tab))
       tab = {
         tab
       }
-      LogError("Some code attempted to iterate over a number.")
     end
     return LUA_PATCHER.unpatched.pairs(tab, ...)
   end)
@@ -212,19 +212,27 @@ PatchPrimitives = function()
   OverwriteTable("NUMBER", NUMBER, {
     __lt = function(a, b)
       if a and b then
-        LogError("Some code attempted to see if a number is bigger or smaller than something else that isn't.")
-        return tostring(a) < tostring(b)
+        if type(a) == type(b) then
+          return a < b
+        else
+          LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
+          return tostring(a) < tostring(b)
+        end
       else
-        LogError("Some code attempted to compare a number with nil.")
+        LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
         return (a or 0) < (b or 0)
       end
     end,
     __le = function(a, b)
       if a and b then
-        LogError("Some code attempted to see if a number is bigger or smaller than something else that isn't.")
-        return tostring(a) <= tostring(b)
+        if type(a) == type(b) then
+          return a <= b
+        else
+          LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
+          return tostring(a) <= tostring(b)
+        end
       else
-        LogError("Some code attempted to compare a number with nil.")
+        LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
         return (a or 0) <= (b or 0)
       end
     end
@@ -232,32 +240,40 @@ PatchPrimitives = function()
   local STRING = getmetatable("") or { }
   OverwriteTable("STRING", STRING, {
     __concat = function(a, b)
-      if not (type(a) == "string" and type(b) == "string") then
-        LogError("Some code attempted to concatenate a string with something that isn't.")
+      if not ((type(a) == "string" or type(a) == "number") and (type(b) == "string" or type(b) == "number")) then
+        LogError('Some code attempted to concatenate "%s" with "%s".', tostring(a), tostring(b))
       end
       return tostring(a) .. tostring(b)
     end,
     __add = function(a, b)
       if not (tonumber(a) and tonumber(b)) then
-        LogError("Some code attempted to add two strings where at least one isn't a number.")
+        LogError('Some code attempted to add "%s" with "%s".', tostring(a), tostring(b))
         return (tonumber(a) or 0) + (tonumber(b) or 0)
       end
     end,
     __lt = function(a, b)
       if a and b then
-        LogError("Some code attempted to see if a string is bigger or smaller than something else that isn't.")
-        return tostring(a) < tostring(b)
+        if type(a) == type(b) then
+          return a < b
+        else
+          LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
+          return tostring(a) < tostring(b)
+        end
       else
-        LogError("Some code attempted to compare a string with nil.")
+        LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
         return (a or 0) < (b or 0)
       end
     end,
     __le = function(a, b)
       if a and b then
-        LogError("Some code attempted to see if a string is bigger or smaller than something else that isn't.")
-        return tostring(a) <= tostring(b)
+        if type(a) == type(b) then
+          return a <= b
+        else
+          LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
+          return tostring(a) <= tostring(b)
+        end
       else
-        LogError("Some code attempted to compare a string with nil.")
+        LogError('Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b))
         return (a or 0) <= (b or 0)
       end
     end
@@ -268,7 +284,7 @@ PatchPrimitives = function()
     debug.setmetatable(0, NUMBER)
     return debug.setmetatable("", STRING)
   else
-    return Log("WARNING: debug.setmetatable is missing, many primitives cannot be patched!")
+    return Log('WARNING: debug.setmetatable is missing, many primitives cannot be patched!')
   end
 end
 local UnpatchPrimitives
@@ -294,13 +310,13 @@ PatchLibraries = function()
   OverwriteTable("bit", bit, {
     band = function(value, ...)
       if not (value) then
-        LogError("Some code attempted to call bit.band without any arguments.")
+        LogError('Some code attempted to call bit.band without any arguments.')
       end
       return LUA_PATCHER.unpatched.bit.band(value or 0, ...)
     end,
     bor = function(value, ...)
       if not (value) then
-        LogError("Some code attempted to call bit.bor without any arguments.")
+        LogError('Some code attempted to call bit.bor without any arguments.')
       end
       return LUA_PATCHER.unpatched.bit.bor(value or 0, ...)
     end
@@ -308,7 +324,7 @@ PatchLibraries = function()
   return OverwriteTable("math", math, {
     abs = function(value, ...)
       if not (value) then
-        LogError("Some code attempted to call math.abs without any arguments.")
+        LogError('Some code attempted to call math.abs without any arguments.')
       end
       return LUA_PATCHER.unpatched.math.abs(value or 0, ...)
     end
@@ -323,31 +339,31 @@ local PatchGModLibraries
 PatchGModLibraries = function()
   OverwriteFunction("CreateClientConVar", function(name, default, shouldsave, userinfo, helptext, min, max, ...)
     if min and not isnumber(min) then
-      LogError("Some code attempted to call CreateClientConVar with non-number min argument.")
+      LogError('Some code attempted to call CreateClientConVar with "%s" min argument.', tostring(min))
       min = nil
     end
     if max and not isnumber(max) then
-      LogError("Some code attempted to call CreateClientConVar with non-number max argument.")
+      LogError('Some code attempted to call CreateClientConVar with "%s" max argument.', tostring(max))
       max = nil
     end
     if (helptext and not isstring(helptext)) then
+      LogError('Some code attempted to call CreateClientConVar with non-string help text.')
       helptext = tostring(helptext)
-      LogError("Some code attempted to call CreateConVar with non-string help text.")
     end
     return LUA_PATCHER.unpatched.CreateClientConVar(name, default, shouldsave, userinfo, helptext, min, max, ...)
   end)
   OverwriteFunction("CreateConVar", function(name, default, flags, helptext, min, max, ...)
     if min and not isnumber(min) then
-      LogError("Some code attempted to call CreateConVar with non-number min argument.")
+      LogError('Some code attempted to call CreateConVar with "%s" min argument.', tostring(min))
       min = nil
     end
     if max and not isnumber(max) then
-      LogError("Some code attempted to call CreateConVar with non-number max argument.")
+      LogError('Some code attempted to call CreateConVar with "%s" max argument.', tostring(max))
       max = nil
     end
     if (helptext and not isstring(helptext)) then
+      LogError('Some code attempted to call CreateConVar with non-string help text.')
       helptext = tostring(helptext)
-      LogError("Some code attempted to call CreateConVar with non-string help text.")
     end
     return LUA_PATCHER.unpatched.CreateConVar(name, default, flags, helptext, min, max, ...)
   end)
@@ -360,14 +376,14 @@ PatchGModLibraries = function()
   end)
   OverwriteFunction("CreateParticleSystem", function(ent, effect, partAttachment, entAttachment, offset, ...)
     if not (isvector(offset)) then
+      LogError('Some code attempted to call CreateParticleSystem with offset "%s".', tostring(offset))
       offset = Vector(0, 0, 0)
-      LogError("Some code attempted to call CreateParticleSystem with an invalid offset argument.")
     end
     return LUA_PATCHER.unpatched.CreateParticleSystem(ent, effect, partAttachment, entAttachment, offset, ...)
   end)
   OverwriteFunction("DynamicLight", function(index, ...)
     if not (index) then
-      LogError("Some code attempted to call DynamicLight without index.")
+      LogError('Some code attempted to call DynamicLight without index.')
       index = 0
     end
     return LUA_PATCHER.unpatched.DynamicLight(index, ...)
@@ -375,7 +391,7 @@ PatchGModLibraries = function()
   OverwriteTable("string", string, {
     Explode = function(separator, str, ...)
       if not (separator and str) then
-        LogError("Some code attempted to explode a string without providing string separator or haystack.")
+        LogError('Some code attempted to use "%s" to explode a string "%s".', tostring(separator), tostring(str))
       end
       return LUA_PATCHER.unpatched.string.Explode(separator or "", str or "", ...)
     end
@@ -410,12 +426,9 @@ PatchGModLibraries = function()
       end
     end,
     WriteString = function(str, ...)
-      if not str then
-        str = ""
-        LogError("Some code attempted to call net.WriteString without providing a string.")
-      elseif not isstring(str) then
+      if not isstring(str) then
         str = tostring(str)
-        LogError("Some code attempted to call net.WriteString with a non-string value.")
+        LogError('Some code attempted to call net.WriteString with argument "%s".', str)
       end
       return LUA_PATCHER.unpatched.net.WriteString(str, ...)
     end
@@ -423,8 +436,8 @@ PatchGModLibraries = function()
   OverwriteTable("util", util, {
     IsValidModel = function(model, ...)
       if not (isstring(model)) then
-        LogError("Some code attempted to call util.IsValidModel with an invalid argument.")
         model = tostring(model)
+        LogError('Some code attempted to call util.IsValidModel with argument "%s".', model)
       end
       return LUA_PATCHER.unpatched.util.IsValidModel(model, ...)
     end
@@ -467,8 +480,8 @@ PatchGModLibraries = function()
       if retValues[1] then
         return select(2, unpack(retValues))
       else
-        LogError("Caught a surface.SetFont error: %s", retValues[2])
-        return LUA_PATCHER.unpatched.surface.SetFont("Default")
+        LogError('Caught a surface.SetFont error: %s', retValues[2])
+        return LUA_PATCHER.unpatched.surface.SetFont('Default')
       end
     end
   })
@@ -873,6 +886,27 @@ PatchClasses = function()
         return LogError("Some code attempted to set a key value of a NULL entity.")
       else
         return LUA_PATCHER.unpatched.ENTITY.SetKeyValue(self, ...)
+      end
+    end,
+    AddEffects = function(self, ...)
+      if NULL == self then
+        return LogError("Some code attempted to add effects to a NULL entity.")
+      else
+        return LUA_PATCHER.unpatched.ENTITY.AddEffects(self, ...)
+      end
+    end,
+    GetEffects = function(self, ...)
+      if NULL == self then
+        return LogError("Some code attempted to get effects of a NULL entity.")
+      else
+        return LUA_PATCHER.unpatched.ENTITY.GetEffects(self, ...)
+      end
+    end,
+    RemoveEffects = function(self, ...)
+      if NULL == self then
+        return LogError("Some code attempted to remove effects of a NULL entity.")
+      else
+        return LUA_PATCHER.unpatched.ENTITY.RemoveEffects(self, ...)
       end
     end
   }

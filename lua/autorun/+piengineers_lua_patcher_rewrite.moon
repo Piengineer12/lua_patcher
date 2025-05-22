@@ -9,8 +9,8 @@ LUA_PATCHER or= {
     tracebacks_logged: {}
 }
 
-LUA_PATCHER.VERSION = "4.1.0" -- to dev: remember to also update addon.json!
-LUA_PATCHER.VERSION_DATE = "2025-05-08"
+LUA_PATCHER.VERSION = "4.2.0" -- to dev: remember to also update addon.json!
+LUA_PATCHER.VERSION_DATE = "2025-05-22"
 
 local Log, LogError
 
@@ -104,103 +104,121 @@ PatchPrimitives = ->
 	NIL = getmetatable(nil) or {}
     OverwriteTable "NIL", NIL, {
         __add: (a, b) ->
-            LogError "Some code attempted to add with nil."
+            LogError 'Some code attempted to add "%s" with "%s".', tostring(a), tostring(b)
             a or b
         __sub: (a, b) ->
-            LogError "Some code attempted to subtract with nil."
+            LogError 'Some code attempted to subtract "%s" with "%s".', tostring(a), tostring(b)
             a or -b
         __mul: (a, b) ->
-            LogError "Some code attempted to multiply with nil."
+            LogError 'Some code attempted to multiply "%s" with "%s".', tostring(a), tostring(b)
             a or b
         __div: (a, b) ->
-            LogError "Some code attempted to divide with nil."
+            LogError 'Some code attempted to divide "%s" by "%s".', tostring(a), tostring(b)
             a
         __pow: (a, b) ->
-            LogError "Some code attempted to raise something to a power with nil."
+            LogError 'Some code attempted to raise "%s" to the power of "%s".', tostring(a), tostring(b)
             if b then nil else a
         __unm: (a) ->
-            LogError "Some code attempted to negate nil."
+            LogError 'Some code attempted to negate "%s".', tostring(a)
             a
         __concat: (a, b) ->
-            LogError "Some code attempted to concatenate with nil."
+            LogError 'Some code attempted to concatenate "%s" with "%s".', tostring(a), tostring(b)
             tostring(a) .. tostring(b)
         __len: (a) ->
-            LogError "Some code attempted to get the length of nil."
+            LogError 'Some code attempted to get the length of "%s".', tostring(a)
             0
         __lt: (a, b) ->
-            LogError "Some code attempted to see if something is bigger or smaller than nil."
+            LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
             if type(a) == "number" or type(b) == "number"
                 (a or 0) < (b or 0)
             else
                 tostring(a) < tostring(b)
         __le: (a, b) ->
-            LogError "Some code attempted to see if something is bigger or smaller than nil."
+            LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
             if type(a) == "number" or type(b) == "number"
                 (a or 0) <= (b or 0)
             else
                 tostring(a) <= tostring(b)
-        __index: -> LogError "Some code attempted to index nil."
-        __newindex: -> LogError "Some code attempted to assign a member value to nil."
-        __call: -> LogError "Some code attempted to call nil as a function."
+        __index: (a, b) ->
+            LogError 'Some code attempted to index "%s" with key "%s".', tostring(a), tostring(b)
+        __newindex: (a, b, c) ->
+            LogError 'Some code attempted to index "%s" setting key "%s" to value "%s".', tostring(a), tostring(b), tostring(c)
+        __call: (a, ...) ->
+            LogError 'Some code attempted to call "%s" as a function with %u arguments.', tostring(a), select '#', ...
     }
 	BOOL = getmetatable(true) or {}
     OverwriteTable "BOOL", BOOL, {
-        __index: -> LogError "Some code attempted to index a boolean."
-        __newindex: -> LogError "Some code attempted to assign a member value to a boolean."
-        __call: -> LogError "Some code attempted to call a boolean as a function."
+        __index: (a, b) ->
+            LogError 'Some code attempted to index "%s" with key "%s".', tostring(a), tostring(b)
+        __newindex: (a, b, c) ->
+            LogError 'Some code attempted to index "%s" setting key "%s" to value "%s".', tostring(a), tostring(b), tostring(c)
+        __call:(a, ...) ->
+            LogError 'Some code attempted to call "%s" as a function with %u arguments.', tostring(a), select '#', ...
     }
 	
     OverwriteFunction "pairs", (tab, ...) ->
         if not tab
             tab = {}
-            LogError "Some code attempted to iterate over nothing."
-        elseif type(tab) == "number"
+            LogError 'Some code attempted to iterate over nothing.'
+        elseif type(tab) == 'number'
             -- TODO: is this actually supposed to mean {[1]: 1, [2]: 2, ..., [tab]: tab}?
+            LogError 'Some code attempted to iterate over "%s".', tostring tab
             tab = {tab}
-            LogError "Some code attempted to iterate over a number."
         LUA_PATCHER.unpatched.pairs tab, ...
 
 	NUMBER = getmetatable(0) or {}
     OverwriteTable "NUMBER", NUMBER, {
         __lt: (a, b) ->
             if a and b
-				LogError "Some code attempted to see if a number is bigger or smaller than something else that isn't."
-				tostring(a) < tostring(b)
+                if type(a) == type(b)
+                    a < b
+                else
+				    LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
+				    tostring(a) < tostring(b)
 			else
-				LogError "Some code attempted to compare a number with nil."
+				LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
 				(a or 0) < (b or 0)
         __le: (a, b) ->
-			if a and b
-				LogError "Some code attempted to see if a number is bigger or smaller than something else that isn't."
-				tostring(a) <= tostring(b)
+            if a and b
+                if type(a) == type(b)
+                    a <= b
+                else
+				    LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
+				    tostring(a) <= tostring(b)
 			else
-				LogError "Some code attempted to compare a number with nil."
+				LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
 				(a or 0) <= (b or 0)
     }
 
 	STRING = getmetatable("") or {}
     OverwriteTable "STRING", STRING, {
         __concat: (a, b) ->
-			unless type(a) == "string" and type(b) == "string"
-				LogError "Some code attempted to concatenate a string with something that isn't."
+			unless (type(a) == "string" or type(a) == "number") and (type(b) == "string" or type(b) == "number")
+                LogError 'Some code attempted to concatenate "%s" with "%s".', tostring(a), tostring(b)
 		    tostring(a) .. tostring(b)
         __add: (a, b) ->
 			unless tonumber(a) and tonumber(b)
-				LogError "Some code attempted to add two strings where at least one isn't a number."
+                LogError 'Some code attempted to add "%s" with "%s".', tostring(a), tostring(b)
 				(tonumber(a) or 0) + (tonumber(b) or 0)
         __lt: (a, b) ->
-			if a and b
-				LogError "Some code attempted to see if a string is bigger or smaller than something else that isn't."
-				tostring(a) < tostring(b)
+            if a and b
+                if type(a) == type(b)
+                    a < b
+                else
+				    LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
+				    tostring(a) < tostring(b)
 			else
-				LogError "Some code attempted to compare a string with nil."
+				LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
 				(a or 0) < (b or 0)
         __le: (a, b) ->
-			if a and b
-				LogError "Some code attempted to see if a string is bigger or smaller than something else that isn't."
-				tostring(a) <= tostring(b)
+            if a and b
+                if type(a) == type(b)
+                    a <= b
+                else
+				    LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
+				    tostring(a) <= tostring(b)
 			else
-				LogError "Some code attempted to compare a string with nil."
+				LogError 'Some code attempted to see if "%s" is bigger or smaller than "%s".', tostring(a), tostring(b)
 				(a or 0) <= (b or 0)
     }
 	
@@ -210,7 +228,7 @@ PatchPrimitives = ->
         debug.setmetatable 0, NUMBER
         debug.setmetatable "", STRING
     else
-        Log "WARNING: debug.setmetatable is missing, many primitives cannot be patched!"
+        Log 'WARNING: debug.setmetatable is missing, many primitives cannot be patched!'
 
 UnpatchPrimitives = ->
 	NIL = getmetatable(nil) or {}
@@ -237,18 +255,18 @@ PatchLibraries = ->
     OverwriteTable "bit", bit, {
         band: (value, ...) ->
             unless value
-                LogError "Some code attempted to call bit.band without any arguments."
+                LogError 'Some code attempted to call bit.band without any arguments.'
             LUA_PATCHER.unpatched.bit.band(value or 0, ...)
         bor: (value, ...) ->
             unless value
-                LogError "Some code attempted to call bit.bor without any arguments."
+                LogError 'Some code attempted to call bit.bor without any arguments.'
             LUA_PATCHER.unpatched.bit.bor(value or 0, ...)
     }
 
     OverwriteTable "math", math, {
         abs: (value, ...) ->
             unless value
-                LogError "Some code attempted to call math.abs without any arguments."
+                LogError 'Some code attempted to call math.abs without any arguments.'
             LUA_PATCHER.unpatched.math.abs(value or 0, ...)
     }
 
@@ -259,26 +277,26 @@ UnpatchLibraries = ->
 PatchGModLibraries = ->
     OverwriteFunction "CreateClientConVar", (name, default, shouldsave, userinfo, helptext, min, max, ...) ->
         if min and not isnumber min
-            LogError "Some code attempted to call CreateClientConVar with non-number min argument."
+            LogError 'Some code attempted to call CreateClientConVar with "%s" min argument.', tostring min
             min = nil
         if max and not isnumber max
-            LogError "Some code attempted to call CreateClientConVar with non-number max argument."
+            LogError 'Some code attempted to call CreateClientConVar with "%s" max argument.', tostring max
             max = nil
         if (helptext and not isstring helptext)
+            LogError 'Some code attempted to call CreateClientConVar with non-string help text.'
             helptext = tostring helptext
-            LogError "Some code attempted to call CreateConVar with non-string help text."
         LUA_PATCHER.unpatched.CreateClientConVar name, default, shouldsave, userinfo, helptext, min, max, ...
     
     OverwriteFunction "CreateConVar", (name, default, flags, helptext, min, max, ...) ->
         if min and not isnumber min
-            LogError "Some code attempted to call CreateConVar with non-number min argument."
+            LogError 'Some code attempted to call CreateConVar with "%s" min argument.', tostring min
             min = nil
         if max and not isnumber max
-            LogError "Some code attempted to call CreateConVar with non-number max argument."
+            LogError 'Some code attempted to call CreateConVar with "%s" max argument.', tostring max
             max = nil
         if (helptext and not isstring helptext)
+            LogError 'Some code attempted to call CreateConVar with non-string help text.'
             helptext = tostring helptext
-            LogError "Some code attempted to call CreateConVar with non-string help text."
         LUA_PATCHER.unpatched.CreateConVar name, default, flags, helptext, min, max, ...
     
     OverwriteFunction "EmitSound", (soundName, ...) ->
@@ -289,20 +307,20 @@ PatchGModLibraries = ->
     
     OverwriteFunction "CreateParticleSystem", (ent, effect, partAttachment, entAttachment, offset, ...) ->
         unless isvector offset
+            LogError 'Some code attempted to call CreateParticleSystem with offset "%s".', tostring offset
             offset = Vector 0, 0, 0
-            LogError "Some code attempted to call CreateParticleSystem with an invalid offset argument."
         LUA_PATCHER.unpatched.CreateParticleSystem ent, effect, partAttachment, entAttachment, offset, ...
     
     OverwriteFunction "DynamicLight", (index, ...) ->
         unless index
-            LogError "Some code attempted to call DynamicLight without index."
+            LogError 'Some code attempted to call DynamicLight without index.'
             index = 0
         LUA_PATCHER.unpatched.DynamicLight index, ...
 
     OverwriteTable "string", string, {
         Explode: (separator, str, ...) ->
             unless separator and str
-                LogError "Some code attempted to explode a string without providing string separator or haystack."
+                LogError 'Some code attempted to use "%s" to explode a string "%s".', tostring(separator), tostring(str)
             LUA_PATCHER.unpatched.string.Explode separator or "", str or "", ...
     }
 
@@ -331,20 +349,17 @@ PatchGModLibraries = ->
 				LUA_PATCHER.unpatched.net.Start "lua_patcher"
         
         WriteString: (str, ...) ->
-			if not str
-                str = ""
-				LogError "Some code attempted to call net.WriteString without providing a string."
-            elseif not isstring str
+			if not isstring str
                 str = tostring str
-				LogError "Some code attempted to call net.WriteString with a non-string value."
+				LogError 'Some code attempted to call net.WriteString with argument "%s".', str
 			LUA_PATCHER.unpatched.net.WriteString str, ...
     }
 
     OverwriteTable "util", util, {
         IsValidModel: (model, ...) ->
 			unless isstring model
-				LogError "Some code attempted to call util.IsValidModel with an invalid argument."
 				model = tostring model
+				LogError 'Some code attempted to call util.IsValidModel with argument "%s".', model
 			LUA_PATCHER.unpatched.util.IsValidModel model, ...
     }
 
@@ -359,7 +374,7 @@ PatchGModLibraries = ->
     OverwriteTable "input", input, {
         IsKeyDown: (key, ...) ->
             if key
-                LUA_PATCHER.unpatched.input.IsKeyDown(key, ...)
+                LUA_PATCHER.unpatched.input.IsKeyDown key, ...
             else
                 LogError "Some code attempted to call input.IsKeyDown without specifying a key."
                 false
@@ -381,8 +396,8 @@ PatchGModLibraries = ->
             if retValues[1]
                 select 2, unpack retValues
             else
-                LogError "Caught a surface.SetFont error: %s", retValues[2]
-                LUA_PATCHER.unpatched.surface.SetFont "Default"
+                LogError 'Caught a surface.SetFont error: %s', retValues[2]
+                LUA_PATCHER.unpatched.surface.SetFont 'Default'
     }
 
 UnpatchGModLibraries = ->
@@ -612,6 +627,21 @@ PatchClasses = ->
 				LogError "Some code attempted to set a key value of a NULL entity."
 			else
                 LUA_PATCHER.unpatched.ENTITY.SetKeyValue @, ...
+        AddEffects: (...) =>
+			if NULL == @
+				LogError "Some code attempted to add effects to a NULL entity."
+			else
+                LUA_PATCHER.unpatched.ENTITY.AddEffects @, ...
+        GetEffects: (...) =>
+			if NULL == @
+				LogError "Some code attempted to get effects of a NULL entity."
+			else
+                LUA_PATCHER.unpatched.ENTITY.GetEffects @, ...
+        RemoveEffects: (...) =>
+			if NULL == @
+				LogError "Some code attempted to remove effects of a NULL entity."
+			else
+                LUA_PATCHER.unpatched.ENTITY.RemoveEffects @, ...
     }
 
     nw_override_table = {
