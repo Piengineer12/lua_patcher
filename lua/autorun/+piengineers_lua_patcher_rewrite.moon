@@ -9,7 +9,7 @@ LUA_PATCHER or= {
     tracebacks_logged: {}
 }
 
-LUA_PATCHER.VERSION = "4.2.0" -- to dev: remember to also update addon.json!
+LUA_PATCHER.VERSION = "4.2.1" -- to dev: remember to also update addon.json!
 LUA_PATCHER.VERSION_DATE = "2025-05-22"
 
 local Log, LogError
@@ -165,6 +165,16 @@ PatchPrimitives = ->
             LogError 'Some code attempted to iterate over "%s".', tostring tab
             tab = {tab}
         LUA_PATCHER.unpatched.pairs tab, ...
+	
+    OverwriteFunction "ipairs", (tab, ...) ->
+        if not tab
+            tab = {}
+            LogError 'Some code attempted to iterate over nothing.'
+        elseif type(tab) == 'number'
+            -- TODO: is this actually supposed to mean {[1]: 1, [2]: 2, ..., [tab]: tab}?
+            LogError 'Some code attempted to iterate over "%s".', tostring tab
+            tab = {tab}
+        LUA_PATCHER.unpatched.ipairs tab, ...
 
 	NUMBER = getmetatable(0) or {}
     OverwriteTable "NUMBER", NUMBER, {
@@ -238,6 +248,7 @@ UnpatchPrimitives = ->
     RollbackTable "BOOL", BOOL
 
     RollbackFunction "pairs"
+    RollbackFunction "ipairs"
 
     NUMBER = getmetatable(0) or {}
     RollbackTable "NUMBER", NUMBER
@@ -635,6 +646,7 @@ PatchClasses = ->
         GetEffects: (...) =>
 			if NULL == @
 				LogError "Some code attempted to get effects of a NULL entity."
+                0
 			else
                 LUA_PATCHER.unpatched.ENTITY.GetEffects @, ...
         RemoveEffects: (...) =>

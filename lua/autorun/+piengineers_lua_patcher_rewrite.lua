@@ -7,7 +7,7 @@ LUA_PATCHER = LUA_PATCHER or {
   unpatched = { },
   tracebacks_logged = { }
 }
-LUA_PATCHER.VERSION = "4.2.0"
+LUA_PATCHER.VERSION = "4.2.1"
 LUA_PATCHER.VERSION_DATE = "2025-05-22"
 local Log, LogError
 if gmod then
@@ -208,6 +208,18 @@ PatchPrimitives = function()
     end
     return LUA_PATCHER.unpatched.pairs(tab, ...)
   end)
+  OverwriteFunction("ipairs", function(tab, ...)
+    if not tab then
+      tab = { }
+      LogError('Some code attempted to iterate over nothing.')
+    elseif type(tab) == 'number' then
+      LogError('Some code attempted to iterate over "%s".', tostring(tab))
+      tab = {
+        tab
+      }
+    end
+    return LUA_PATCHER.unpatched.ipairs(tab, ...)
+  end)
   local NUMBER = getmetatable(0) or { }
   OverwriteTable("NUMBER", NUMBER, {
     __lt = function(a, b)
@@ -294,6 +306,7 @@ UnpatchPrimitives = function()
   local BOOL = getmetatable(true) or { }
   RollbackTable("BOOL", BOOL)
   RollbackFunction("pairs")
+  RollbackFunction("ipairs")
   local NUMBER = getmetatable(0) or { }
   RollbackTable("NUMBER", NUMBER)
   local STRING = getmetatable("") or { }
@@ -897,7 +910,8 @@ PatchClasses = function()
     end,
     GetEffects = function(self, ...)
       if NULL == self then
-        return LogError("Some code attempted to get effects of a NULL entity.")
+        LogError("Some code attempted to get effects of a NULL entity.")
+        return 0
       else
         return LUA_PATCHER.unpatched.ENTITY.GetEffects(self, ...)
       end
